@@ -1,0 +1,15 @@
+{ 
+    "compilerOptions": {
+      "target": "es2015",
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "typeRoots": ["./node_module/@types"],
+      "sourceMap": true,
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "removeComments": false,
+      "noImplicitAny": false,
+      "skipLibCheck": true
+    },
+    "exclude": [ "NodeApp", "node_modules", "streaming/node/node_modules", "streaming/node", "streaming/node/src", "AdeptWebViewer/assets/foxit-lib/*.ts", "AdeptWebViewer/assets/foxit-lib/custom/*.ts", "AdeptViewer-win32-x64/resources/app/Streaming/node/src/" ] 
+  }
