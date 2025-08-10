@@ -1,0 +1,43 @@
+{ // điều chỉnh theo json export
+  "type": "freetext",
+  "rect": { "left": 182.47, "top": 492.7, "right": 608.11, "bottom": 196.23 }, ==> string
+  "defaultAppearance": { "textSize": 12, "textColor": 16711680 }, => Hex
+  "color": 16711680, => Hex
+  "borderInfo": { "width": 1.29, "style": 0, "dashes": [] },
+  "title": "title",
+  "contents": "",
+  "subject": "Textbox",
+  "interior-color": 16777215, => Hex
+  "rotate": 0,
+  "flags": 4, => Text
+  "intent": "FreeText"
+},
+{ // lấy từ hàm vẽ textbox
+    "type": "freetext",
+    "title": "title",
+    "contents": "",
+    "rect": {
+        "left": 393.7162629757786,
+        "top": 400.54022491349485,
+        "right": 564.5397923875432,
+        "bottom": 153.89662629757788
+    },
+    "subject": "Textbox",
+    "interior-color": 16777215,
+    "rotate": 0,
+    "flags": 4,
+    "intent": "FreeText"
+},
+{ // lấy từ code sample
+    "type": "freetext",
+    "rect": {
+        "left": 130.50532124556565,
+        "top": 691.7579818683486,
+        "right": 230.50532124556568,
+        "bottom": 671.7579818683486
+    },
+    "subject": "Textbox",
+    "interior-color": 16777215,
+    "rotate": 0,
+    "flags": 4
+}

@@ -53,6 +53,18 @@ function startApp() {
     startUIServer();
 }
 function resolvePath(startPath) {
+    // If the path is already absolute, use it directly
+    if (path.isAbsolute(startPath)) {
+        if (fs.existsSync(startPath)) {
+            console.log(`Absolute path exists: ${startPath}`);
+            return startPath;
+        }
+        else {
+            console.log(`Absolute path does not exist: ${startPath}`);
+            return "";
+        }
+    }
+    // Otherwise, try relative to __dirname
     let currentPath = path.join(__dirname, startPath);
     if (fs.existsSync(currentPath)) {
         console.log(`Path exists ${currentPath}`);
@@ -79,7 +91,8 @@ function resolvePath(startPath) {
     }
 }
 function startUIServer() {
-    let pathFound = resolvePath("AdeptWebViewer/index.html");
+    // let pathFound = resolvePath("i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html");
+    let pathFound = resolvePath("i:/Code/0.Code/Synergis/Dev/Foxit/index.html");
     if (pathFound == "") {
         console.log("Could not find the WebUI directory");
         quitApp();
@@ -94,12 +107,12 @@ function startUIServer() {
         },
     }));
     // Set Service-Worker-Allowed header for MessageWorker.js
-    expressAppUI.use(`/assets/foxit-lib/MessageWorker.js`, (req, res, next) => {
+    expressAppUI.use(`/lib/MessageWorker.js`, (req, res, next) => {
         res.setHeader('Service-Worker-Allowed', '/');
         next();
     });
     // Set Service-Worker-Allowed header for WebPDFJRWorker.js
-    expressAppUI.use(`/assets/foxit-lib/WebPDFJRWorker.js`, (req, res, next) => {
+    expressAppUI.use(`/lib/WebPDFJRWorker.js`, (req, res, next) => {
         res.setHeader('Service-Worker-Allowed', '/');
         next();
     });
