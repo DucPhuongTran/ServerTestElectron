@@ -14,12 +14,12 @@ const path = require("path");
 const fs = require("fs");
 const express = require("express");
 var Registry = require("winreg");
-const http_proxy_middleware_1 = require("http-proxy-middleware");
 const expressAppUI = express();
 let win = null;
 let UIPort = 4200;
 const startMode = electron_1.app.commandLine.getSwitchValue("mode");
 const runFromLauncher = electron_1.app.commandLine.hasSwitch("launcher");
+const ViewerPath = "i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html";
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
 console.log("StartMode=", startMode);
 console.log("Launcher=", runFromLauncher);
@@ -92,20 +92,24 @@ function resolvePath(startPath) {
 }
 function startUIServer() {
     // let pathFound = resolvePath("i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html");
-    let pathFound = resolvePath("i:/Code/0.Code/Synergis/Dev/Foxit/index.html");
+    // let pathFound = resolvePath("Foxit/index.html");
+    let pathFound = resolvePath(ViewerPath);
     if (pathFound == "") {
         console.log("Could not find the WebUI directory");
         quitApp();
     }
     pathFound = path.dirname(pathFound);
     expressAppUI.use("/help", express.static(path.join(__dirname, "help")));
-    expressAppUI.use("/fileserver", (0, http_proxy_middleware_1.createProxyMiddleware)({
-        target: `http://localhost:11180`,
-        changeOrigin: true,
-        pathRewrite: {
-            [`^/fileserver`]: "",
-        },
-    }));
+    // expressAppUI.use(
+    //   "/fileserver",
+    //   createProxyMiddleware({
+    //     target: `http://localhost:11180`,
+    //     changeOrigin: true,
+    //     pathRewrite: {
+    //       [`^/fileserver`]: "",
+    //     },
+    //   })
+    // );
     // Set Service-Worker-Allowed header for MessageWorker.js
     expressAppUI.use(`/lib/MessageWorker.js`, (req, res, next) => {
         res.setHeader('Service-Worker-Allowed', '/');

@@ -27,6 +27,7 @@ let UIPort = 4200;
 const startMode = app.commandLine.getSwitchValue("mode");
 
 const runFromLauncher = app.commandLine.hasSwitch("launcher");
+const ViewerPath = "i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html"
 
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -101,7 +102,8 @@ function resolvePath(startPath) {
 }
 function startUIServer() {
   // let pathFound = resolvePath("i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html");
-  let pathFound = resolvePath("i:/Code/0.Code/Synergis/Dev/Foxit/index.html");
+  // let pathFound = resolvePath("Foxit/index.html");
+    let pathFound = resolvePath(ViewerPath);
   if (pathFound == "") {
     console.log("Could not find the WebUI directory");
     quitApp();
@@ -110,16 +112,16 @@ function startUIServer() {
 
   expressAppUI.use("/help", express.static(path.join(__dirname, "help")));
 
-  expressAppUI.use(
-    "/fileserver",
-    createProxyMiddleware({
-      target: `http://localhost:11180`,
-      changeOrigin: true,
-      pathRewrite: {
-        [`^/fileserver`]: "",
-      },
-    })
-  );
+  // expressAppUI.use(
+  //   "/fileserver",
+  //   createProxyMiddleware({
+  //     target: `http://localhost:11180`,
+  //     changeOrigin: true,
+  //     pathRewrite: {
+  //       [`^/fileserver`]: "",
+  //     },
+  //   })
+  // );
 
   // Set Service-Worker-Allowed header for MessageWorker.js
   expressAppUI.use(`/lib/MessageWorker.js`, (req, res, next) => {
