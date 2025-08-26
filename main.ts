@@ -27,7 +27,7 @@ let UIPort = 4200;
 const startMode = app.commandLine.getSwitchValue("mode");
 
 const runFromLauncher = app.commandLine.hasSwitch("launcher");
-const ViewerPath = "i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html"
+const ViewerPath = "C:/Synergis/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html"
 
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -123,19 +123,22 @@ function startUIServer() {
   //   })
   // );
 
-  // Set Service-Worker-Allowed header for MessageWorker.js
-  expressAppUI.use(`/lib/MessageWorker.js`, (req, res, next) => {
-    res.setHeader('Service-Worker-Allowed', '/');
-    next();
-  });
-
-  // Set Service-Worker-Allowed header for WebPDFJRWorker.js
-  expressAppUI.use(`/lib/WebPDFJRWorker.js`, (req, res, next) => {
-    res.setHeader('Service-Worker-Allowed', '/');
-    next();
-  });
-
-  expressAppUI.get("*.*", express.static(pathFound, { maxAge: 1000 }));
+  expressAppUI.use(
+    express.static(pathFound, {
+      maxAge: 1000,
+      setHeaders: (res, filePath: string) => {
+        // Starting from FoxitPDFSDK for Web version 10.0.0, since service worker is used,
+        // it is necessary to add this field in the HTTP response header of the Service Worker script
+        if (filePath.includes('MessageWorker.js') || filePath.includes('WebPDFJRWorker.js')) {
+          res.setHeader('Service-Worker-Allowed', '/');
+        }
+        // Fix: .wasm Not Recognized as WebAssembly
+        if (filePath.endsWith('.wasm')) {
+          res.setHeader('Content-Type', 'application/wasm');
+        }
+      },
+    })
+  );
 
   expressAppUI.all("*", function (req, res) {
     res.status(200).sendFile(`/`, { root: pathFound });
