@@ -25,9 +25,12 @@ const expressAppUI: express.Application = express();
 let win: BrowserWindow | null = null;
 let UIPort = 4200;
 const startMode = app.commandLine.getSwitchValue("mode");
-
+let lastPosition = [];
 const runFromLauncher = app.commandLine.hasSwitch("launcher");
-const ViewerPath = "i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html"
+const ViewerPath = "e:/0.Code/0.Code/Dev/BuildViewer/AdeptWebViewer/index.html";
+// const ViewerPath = "e:/0.Code/0.Code/Dev/BuildViewer/AdeptWebViewer_Build/index.html"
+// const ViewerPath = "e:/0.Code/0.Code/Dev/ViewerWebUI_Hicas_Dev/dist/AdeptWebViewer/index.html";
+
 
 
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -65,6 +68,7 @@ app.on("activate", async () => {
 });
 function startApp() {
   startUIServer();
+  createMainWindow();
 }
 function resolvePath(startPath) {
   // If the path is already absolute, use it directly
@@ -103,7 +107,7 @@ function resolvePath(startPath) {
 function startUIServer() {
   // let pathFound = resolvePath("i:/Code/0.Code/Synergis/Dev/ViewerWebUI_Hicas/dist/AdeptWebViewer/index.html");
   // let pathFound = resolvePath("Foxit/index.html");
-    let pathFound = resolvePath(ViewerPath);
+  let pathFound = resolvePath(ViewerPath);
   if (pathFound == "") {
     console.log("Could not find the WebUI directory");
     quitApp();
@@ -112,30 +116,22 @@ function startUIServer() {
 
   expressAppUI.use("/help", express.static(path.join(__dirname, "help")));
 
-  // expressAppUI.use(
-  //   "/fileserver",
-  //   createProxyMiddleware({
-  //     target: `http://localhost:11180`,
-  //     changeOrigin: true,
-  //     pathRewrite: {
-  //       [`^/fileserver`]: "",
-  //     },
-  //   })
-  // );
-
-  // Set Service-Worker-Allowed header for MessageWorker.js
-  expressAppUI.use(`/lib/MessageWorker.js`, (req, res, next) => {
-    res.setHeader('Service-Worker-Allowed', '/');
-    next();
-  });
-
-  // Set Service-Worker-Allowed header for WebPDFJRWorker.js
-  expressAppUI.use(`/lib/WebPDFJRWorker.js`, (req, res, next) => {
-    res.setHeader('Service-Worker-Allowed', '/');
-    next();
-  });
-
-  expressAppUI.get("*.*", express.static(pathFound, { maxAge: 1000 }));
+  expressAppUI.use(
+    express.static(pathFound, {
+      maxAge: 1000,
+      setHeaders: (res, filePath) => {
+        // Starting from FoxitPDFSDK for Web version 10.0.0, since service worker is used,
+        // it is necessary to add this field in the HTTP response header of the Service Worker script
+        if (filePath.endsWith('MessageWorker.js') || filePath.endsWith('WebPDFJRWorker.js')) {
+          res.setHeader('Service-Worker-Allowed', '/');
+        }
+        // Fix: .wasm Not Recognized as WebAssembly
+        if (filePath.endsWith('.wasm')) {
+          res.setHeader('Content-Type', 'application/wasm');
+        }
+      },
+    })
+  );
 
   expressAppUI.all("*", function (req, res) {
     res.status(200).sendFile(`/`, { root: pathFound });
@@ -153,4 +149,69 @@ function quitApp() {
     win.destroy();
   }
   app.quit();
+}
+
+function createMainWindow() {
+  win = new BrowserWindow({
+    width: 1600,
+    height: 900,
+    // frame: false,
+    // titleBarStyle: "hidden",
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: true,
+      webSecurity: false,
+    },
+  });
+  win.loadURL(`http://localhost:${UIPort}/open`);
+  win.on("closed", () => {
+    ipcMain.removeAllListeners();
+    win = null;
+  });
+  win.webContents.on("will-prevent-unload", (event) => {
+    event.preventDefault();
+  });
+  win.webContents.session.webRequest.onHeadersReceived(
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          "Access-Control-Allow-Origin": ["*"],
+          // We use this to bypass headers
+          "Access-Control-Allow-Headers": ["*"],
+          ...details.responseHeaders,
+        },
+      });
+    }
+  );
+
+  win.webContents.session.clearCache().then(() => {
+    console.log("Cache cleared for current session");
+  });
+
+  win.removeMenu();
+
+  win.on("close", async (e) => {
+    e.preventDefault();
+    win.webContents.send("app-closing");
+  });
+
+  win.once("focus", () => win.flashFrame(false));
+
+  //win.webContents.openDevTools();
+
+  ipcMain.on("app-close", (e) => {
+    lastPosition = win.getPosition();
+    if (win) {
+      try {
+        win.webContents.closeDevTools();
+        win.close();
+        win.destroy();
+        win = null;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  });
+  win.webContents.openDevTools();
 }
